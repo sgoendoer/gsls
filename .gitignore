@@ -1,3 +1,11 @@
+/target/
+/bin/
+
+.DS_Store
+.classpath
+.project
+.settings
+
 *.class
 
 # Mobile Tools for Java (J2ME)
