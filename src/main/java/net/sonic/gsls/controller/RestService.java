@@ -46,7 +46,7 @@ public class RestService
 	@RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<String> index() throws URISyntaxException
 	{
-		LOGGER.error("Incomin request: GET /");
+		LOGGER.error("Incoming request: GET /");
 		List<PeerAddress> AllNeighbors = DHTManager.getInstance().getAllNeighbors();
 		
 		JSONArray connectedNodes = new JSONArray();
@@ -60,9 +60,7 @@ public class RestService
 		version.put("build", Config.getInstance().getVersionNumber());
 		
 		JSONObject response = new JSONObject();
-		response.put("Code", 200);
-		response.put("Description", "OK");
-		response.put("Value", "");
+		response.put("status", 200);
 		response.put("version", version);
 		response.put("connectedNodes", connectedNodes);
 		
@@ -72,25 +70,23 @@ public class RestService
 	
 	//STATUS: Index Function is working absolutely fine.
 	
-	@RequestMapping(value = "guid/{GUID}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+	@RequestMapping(value = "/{globalID}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ResponseBody
-	public ResponseEntity<String> getEntitybyGUID(@PathVariable("GUID") String GUID)
+	public ResponseEntity<String> getEntityByGlobalID(@PathVariable("globalID") String globalID)
 	{
-		LOGGER.error("Incoming request: GET /guid/" + GUID);
+		LOGGER.error("Incoming request: GET /" + globalID);
 		
-		if(GUID == null)
+		if(globalID == null)
 		{
 			// received get request for path /guid/, but no guid.
 			JSONObject response = new JSONObject();
 			
-			response.put("Code", 400);
-			response.put("Description", "Bad Request");
-			response.put("Explanation", "GUID not specified in request URL");
-			response.put("Value", "");
+			response.put("status", 400);
+			response.put("message", "GlobalID not specified in request URL");
 			
 			return new ResponseEntity<String>(response.toString(), HttpStatus.BAD_REQUEST);
 		}
-		else //if(GUID != null)
+		else //if(globalID != null)
 		{
 			String jwt = null;
 			
@@ -99,17 +95,15 @@ public class RestService
 				// get JWT from DHT
 				try
 				{
-					jwt = DHTManager.getInstance().get(GUID);
+					jwt = DHTManager.getInstance().get(globalID);
 				}
 				catch (GIDNotFoundException e)
 				{
-					// tried to get dataset from dht, caught an exception
+					// tried to get SocialRecord from dht, caught an exception
 					JSONObject response = new JSONObject();
 					
-					response.put("Code", 404);
-					response.put("Description", "Not found");
-					response.put("Explanation", "GUID not found");
-					response.put("Value", "");
+					response.put("status", 404);
+					response.put("message", "GlobalID not found");
 					
 					return new ResponseEntity<String>(response.toString(), HttpStatus.NOT_FOUND);
 				}
@@ -119,10 +113,8 @@ public class RestService
 					// tried to get dataset from dht, found null. this should NEVER happen!
 					JSONObject response = new JSONObject();
 					
-					response.put("Code", 404);
-					response.put("Description", "Not found");
-					response.put("Explanation", "GUID not found. DHT returned NULL.");
-					response.put("Value", "");
+					response.put("status", 404);
+					response.put("message", "GlobalID not found. DHT returned NULL.");
 					
 					return new ResponseEntity<String>(response.toString(), HttpStatus.NOT_FOUND);
 				}
@@ -146,10 +138,8 @@ public class RestService
 						
 						JSONObject response = new JSONObject();
 						
-						response.put("Code", 500);
-						response.put("Description", "Internal Server Error");
-						response.put("Explanation", "Malformed JWT found in DHT: " + jwt + " e: " + e.getMessage());
-						response.put("Value", "");
+						response.put("status", 500);
+						response.put("message", "Malformed JWT found in DHT: " + jwt + " e: " + e.getMessage());
 						
 						return new ResponseEntity<String>(response.toString(), HttpStatus.INTERNAL_SERVER_ERROR);
 					}
@@ -159,19 +149,17 @@ public class RestService
 					
 					try
 					{
-						publicKey = KeyPairManager.decodePublicKey(data.getString("publicKey"));
+						publicKey = KeyPairManager.decodePublicKey(data.getString("personalPublicKey"));
 					}
 					catch (InvalidKeySpecException | NoSuchAlgorithmException e)
 					{
 						// got jwt from dht, tried to extract public key, failed while doing so
-						LOGGER.error("Malformed public key found in DHT: " + jwt + " e: " + e.getMessage());
+						LOGGER.error("Malformed public key found in SocialRecord: " + jwt + " e: " + e.getMessage());
 						
 						JSONObject response = new JSONObject();
 						
-						response.put("Code", 500);
-						response.put("Description", "Internal Server Error");
-						response.put("Explanation", "Malformed public key found in DHT: " + jwt + " e: " + e.getMessage());
-						response.put("Value", "");
+						response.put("status", 500);
+						response.put("message", "Malformed personal public key found in DHT: " + jwt + " e: " + e.getMessage());
 						
 						return new ResponseEntity<String>(response.toString(), HttpStatus.INTERNAL_SERVER_ERROR);
 					}
@@ -188,10 +176,8 @@ public class RestService
 						
 						JSONObject response = new JSONObject();
 						
-						response.put("Code", 500);
-						response.put("Description", "Internal Server Error");
-						response.put("Explanation", "Malformed JWT found in DHT: " + jwt + " e: " + e.getMessage());
-						response.put("Value", "");
+						response.put("status", 500);
+						response.put("message", "Malformed JWT found in DHT: " + jwt + " e: " + e.getMessage());
 						
 						return new ResponseEntity<String>(response.toString(), HttpStatus.INTERNAL_SERVER_ERROR);
 					}
@@ -202,21 +188,19 @@ public class RestService
 						
 						JSONObject response = new JSONObject();
 						
-						response.put("Code", 500);
-						response.put("Description", "Internal Server Error");
-						response.put("Explanation", "Malformed signature for JWT found in DHT: " + jwt + " e: " + e.getMessage());
-						response.put("Value", "");
+						response.put("status", 500);
+						response.put("message", "Malformed signature for JWT found in DHT: " + jwt + " e: " + e.getMessage());
 						
 						return new ResponseEntity<String>(response.toString(), HttpStatus.INTERNAL_SERVER_ERROR);
 					}
 					
-					LOGGER.info("JWT for GUID " + GUID + " verified");
+					LOGGER.info("JWT for GlobalID " + globalID + " verified");
 					
 					JSONObject response = new JSONObject();
 					
-					response.put("Code", 200);
-					response.put("Description", "OK");
-					response.put("Value", jwt);
+					response.put("status", 200);
+					response.put("message", "OK");
+					response.put("socialRecord", jwt);
 					
 					return new ResponseEntity<String>(response.toString(), HttpStatus.OK);
 				}
@@ -228,10 +212,8 @@ public class RestService
 				
 				JSONObject response = new JSONObject();
 				
-				response.put("Code", 500);
-				response.put("Description", "Internal Server Error");
-				response.put("Explanation", "Faulty JSON data in DHT: " + jwt + " e: " + e.getMessage());
-				response.put("Value", "");
+				response.put("status", 500);
+				response.put("message", "Faulty JSON data in DHT: " + jwt + " e: " + e.getMessage());
 				
 				return new ResponseEntity<String>(response.toString(), HttpStatus.INTERNAL_SERVER_ERROR);
 			}
@@ -242,20 +224,18 @@ public class RestService
 				
 				JSONObject response = new JSONObject();
 				
-				response.put("Code", 500);
-				response.put("Description", "Internal server error");
-				response.put("Explanation", "Internal Server Error: " + jwt + " e: " + e.getMessage());
-				response.put("Value", "");
+				response.put("status", 500);
+				response.put("message", "Internal Server Error: " + jwt + " e: " + e.getMessage());
 				
 				return new ResponseEntity<String>(response.toString(), HttpStatus.INTERNAL_SERVER_ERROR);
 			}
 		}
 	}
 	
-	@RequestMapping(value = "guid/{GUID}", method = RequestMethod.PUT)
-	public ResponseEntity<String> putdata(@RequestBody String jwt, @PathVariable("GUID") String GUID)
+	@RequestMapping(value = "/{globalID}", method = RequestMethod.PUT)
+	public ResponseEntity<String> putdata(@RequestBody String jwt, @PathVariable("globalID") String globalID)
 	{
-		LOGGER.error("Incoming request: PUT /guid/" + GUID + " - JWT: " + jwt);
+		LOGGER.error("Incoming request: PUT /" + globalID + " - JWT: " + jwt);
 		
 		JSONObject newData; // the new version of the jwt
 		JSONObject existingData; // the already existing version (if there is any)
