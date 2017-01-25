@@ -70,10 +70,17 @@ public class RestService
 	
 	//STATUS: Index Function is working absolutely fine.
 	
+	/**
+	 * retrieve a SocialRecord
+	 * @param globalID
+	 * @return ResponseEntity
+	 */
 	@RequestMapping(value = "/{globalID}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ResponseBody
 	public ResponseEntity<String> getEntityByGlobalID(@PathVariable("globalID") String globalID)
 	{
+		SocialRecord socialRecord;
+		
 		LOGGER.error("Incoming request: GET /" + globalID);
 		
 		if(globalID == null)
@@ -129,7 +136,9 @@ public class RestService
 					// verify dataset integrity
 					try
 					{
-						SocialRecord.checkDatasetValidity(data);
+						//SocialRecord.checkSocialRecordValidity(data);
+						socialRecord = SocialRecord.createFromJSONObject(data);
+						socialRecord.validateSchema();
 					}
 					catch (SocialRecordIntegrityException e)
 					{
@@ -199,8 +208,7 @@ public class RestService
 					JSONObject response = new JSONObject();
 					
 					response.put("status", 200);
-					response.put("message", "OK");
-					response.put("socialRecord", jwt);
+					response.put("message", jwt);
 					
 					return new ResponseEntity<String>(response.toString(), HttpStatus.OK);
 				}
@@ -232,28 +240,34 @@ public class RestService
 		}
 	}
 	
-	@RequestMapping(value = "/{globalID}", method = RequestMethod.PUT)
-	public ResponseEntity<String> putdata(@RequestBody String jwt, @PathVariable("globalID") String globalID)
+	/**
+	 * upload a new SocialRecord
+	 * @param globalID
+	 * @return ResponseEntity
+	 */
+	@RequestMapping(value = "/{globalID}", method = RequestMethod.POST)
+	public ResponseEntity<String> postDdata(@RequestBody String jwt, @PathVariable("globalID") String globalID)
 	{
-		LOGGER.error("Incoming request: PUT /" + globalID + " - JWT: " + jwt);
+		LOGGER.error("Incoming request: POST /" + globalID + " - JWT: " + jwt);
 		
-		JSONObject newData; // the new version of the jwt
-		JSONObject existingData; // the already existing version (if there is any)
-		
-		PublicKey newDatasetPublicKey; // the public key of the NEW version
+		SocialRecord socialRecord;
+		JSONObject data; // the new jwt
+		PublicKey publicKey; // the public key of the NEW version
 		
 		try
 		{
 			// decode JWT
 			JSONObject jwtPayload = new JSONObject(new String(Base64UrlCodec.BASE64URL.decodeToString(jwt.split("\\.")[1])));
-			newData = new JSONObject(Base64UrlCodec.BASE64URL.decodeToString(jwtPayload.get("data").toString()));
+			data = new JSONObject(Base64UrlCodec.BASE64URL.decodeToString(jwtPayload.get("data").toString()));
 			
-			//LOGGER.info("decoded JWT payload: " + newData.toString());
+			//LOGGER.info("decoded JWT payload: " + data.toString());
 			
-			// verify dataset integrity
+			// verify SocialRecord integrity
 			try
 			{
-				SocialRecord.checkDatasetValidity(newData);
+				//SocialRecord.checkSocialRecordValidity(data);
+				socialRecord = SocialRecord.createFromJSONObject(data);
+				socialRecord.validateSchema();
 			}
 			catch (SocialRecordIntegrityException e)
 			{
@@ -261,10 +275,8 @@ public class RestService
 				
 				JSONObject response = new JSONObject();
 				
-				response.put("Code", 400);
-				response.put("Description", "Bad Request");
-				response.put("Explanation", "JWT is malformed: " + jwt + " e: " + e.getMessage());
-				response.put("Value", "");
+				response.put("status", 400);
+				response.put("message", "JWT is malformed: " + jwt + " e: " + e.getMessage());
 				
 				return new ResponseEntity<String>(response.toString(), HttpStatus.BAD_REQUEST);
 			}
@@ -272,7 +284,7 @@ public class RestService
 			// decode key
 			try
 			{
-				newDatasetPublicKey = KeyPairManager.decodePublicKey(newData.getString("publicKey"));
+				publicKey = KeyPairManager.decodePublicKey(data.getString("publicKey"));
 			}
 			catch (InvalidKeySpecException | NoSuchAlgorithmException e)
 			{
@@ -280,10 +292,8 @@ public class RestService
 				
 				JSONObject response = new JSONObject();
 				
-				response.put("Code", 400);
-				response.put("Description", "Bad Request");
-				response.put("Explanation", "Malformed public key found in JWT: " + jwt + " e: " + e.getMessage());
-				response.put("Value", "");
+				response.put("status", 400);
+				response.put("message", "Malformed public key found in JWT: " + jwt + " e: " + e.getMessage());
 				
 				return new ResponseEntity<String>(response.toString(), HttpStatus.BAD_REQUEST);
 			}
@@ -291,7 +301,7 @@ public class RestService
 			// verify jwt
 			try
 			{
-				Jwts.parser().setSigningKey(newDatasetPublicKey).parseClaimsJws(jwt);
+				Jwts.parser().setSigningKey(publicKey).parseClaimsJws(jwt);
 			}
 			catch (MalformedJwtException | UnsupportedJwtException e)
 			{
@@ -299,10 +309,8 @@ public class RestService
 				
 				JSONObject response = new JSONObject();
 				
-				response.put("Code", 400);
-				response.put("Description", "Bad Request");
-				response.put("Explanation", "Malformed JWT: " + jwt + " e: " + e.getMessage());
-				response.put("Value", "");
+				response.put("status", 400);
+				response.put("message", "Malformed JWT: " + jwt + " e: " + e.getMessage());
 				
 				return new ResponseEntity<String>(response.toString(), HttpStatus.BAD_REQUEST);
 			}
@@ -312,67 +320,194 @@ public class RestService
 				
 				JSONObject response = new JSONObject();
 				
-				response.put("Code", 400);
-				response.put("Description", "Bad Request");
-				response.put("Explanation", "Malformed signature for JWT: " + jwt + " e: " + e.getMessage());
-				response.put("Value", "");
+				response.put("status", 400);
+				response.put("message", "Malformed signature for JWT: " + jwt + " e: " + e.getMessage());
 				
 				return new ResponseEntity<String>(response.toString(), HttpStatus.BAD_REQUEST);
 			}
 			
-			LOGGER.info("JWT for GUID " + GUID + " verified");
-			
-			// match new JWT to existing JWT
-			String existingJWT = null;
+			LOGGER.info("JWT for GlobalID " + globalID + " verified");
 			
 			try
 			{
-				existingJWT = DHTManager.getInstance().get(GUID);
+				// everything is fine. write SocialRecord to DHT
+				DHTManager.getInstance().put(globalID, jwt);
 				
-				// GUID found. Ergo, we are updating an existing dataset
+				LOGGER.info("SocialRecord for GlobalID " + globalID + " uploaded: \n" + jwt);
+			}
+			catch (IOException e)
+			{
+				// tried to write SocialRecord, found an existing one. Encountered an IO error while writing
+				JSONObject response = new JSONObject();
+				
+				response.put("status", 500);
+				response.put("message", "Error while writing to DHT: " + jwt + " e: " + e.getMessage());
+				
+				return new ResponseEntity<String>(response.toString(), HttpStatus.INTERNAL_SERVER_ERROR);
+			}
+			
+			LOGGER.info("SocialRecord for [" + globalID + "] written to DHT: \n" + jwt);
+			
+			JSONObject response = new JSONObject();
+			
+			response.put("status", 200);
+			response.put("message", "SocialRecord for GlobalID " + globalID + " updated: " + jwt);
+			
+			return new ResponseEntity<String>(response.toString(), HttpStatus.OK);
+		}
+		catch(JSONException e)
+		{
+			// somewhere, a json exception was thrown
+			LOGGER.error("Faulty JSON data: " + jwt + " e: " + e.getMessage());
+			
+			JSONObject response = new JSONObject();
+			
+			response.put("status", 500);
+			response.put("message", "Faulty JSON data: " + jwt + " e: " + e.getMessage());
+			
+			return new ResponseEntity<String>(response.toString(), HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+	
+	/**
+	 * edit an existing SocialRecord by overwriting with a new version
+	 * 
+	 * @param jwt
+	 * @param globalID
+	 * @return ResonseEntity
+	 */
+	@RequestMapping(value = "/{globalID}", method = RequestMethod.PUT)
+	public ResponseEntity<String> putdata(@RequestBody String jwt, @PathVariable("globalID") String globalID)
+	{
+		LOGGER.error("Incoming request: PUT /" + globalID + " - JWT: " + jwt);
+		
+		SocialRecord newSocialRecord;
+		SocialRecord existingSocialRecord;
+		String existingJWT = null;
+		JSONObject newData; // the new version of the jwt
+		JSONObject existingData; // the already existing version (if there is any)
+		
+		PublicKey newPersonalPublicKey; // the personal public key of the NEW version
+		PublicKey existingPersonalPublicKey;
+		
+		try
+		{
+			// decode JWT
+			JSONObject jwtPayload = new JSONObject(new String(Base64UrlCodec.BASE64URL.decodeToString(jwt.split("\\.")[1])));
+			newData = new JSONObject(Base64UrlCodec.BASE64URL.decodeToString(jwtPayload.get("data").toString()));
+			
+			//LOGGER.info("decoded JWT payload: " + newData.toString());
+			
+			// verify SocialRecord integrity
+			try
+			{
+				//SocialRecord.checkDatasetValidity(newData);
+				newSocialRecord = SocialRecord.createFromJSONObject(newData);
+				newSocialRecord.validateSchema();
+			}
+			catch (SocialRecordIntegrityException e)
+			{
+				LOGGER.error("Integrity Exception found for received JWT: " + jwt + " e: " + e.getMessage());
+				
+				JSONObject response = new JSONObject();
+				
+				response.put("status", 400);
+				response.put("message", "JWT is malformed: " + jwt + " e: " + e.getMessage());
+				
+				return new ResponseEntity<String>(response.toString(), HttpStatus.BAD_REQUEST);
+			}
+			
+			// decode key
+			try
+			{
+				newPersonalPublicKey = KeyPairManager.decodePublicKey(newData.getString("personalPublicKey"));
+			}
+			catch (InvalidKeySpecException | NoSuchAlgorithmException e)
+			{
+				LOGGER.error("Malformed public key found in JWT: " + jwt + " e: " + e.getMessage());
+				
+				JSONObject response = new JSONObject();
+				
+				response.put("status", 400);
+				response.put("message", "Malformed public key found in JWT: " + jwt + " e: " + e.getMessage());
+				
+				return new ResponseEntity<String>(response.toString(), HttpStatus.BAD_REQUEST);
+			}
+			
+			// verify jwt
+			try
+			{
+				Jwts.parser().setSigningKey(newPersonalPublicKey).parseClaimsJws(jwt);
+			}
+			catch (MalformedJwtException | UnsupportedJwtException e)
+			{
+				LOGGER.error("Malformed JWT found in DHT: " + jwt + " e: " + e.getMessage());
+				
+				JSONObject response = new JSONObject();
+				
+				response.put("status", 400);
+				response.put("message", "Malformed JWT: " + jwt + " e: " + e.getMessage());
+				
+				return new ResponseEntity<String>(response.toString(), HttpStatus.BAD_REQUEST);
+			}
+			catch (SignatureException e)
+			{
+				LOGGER.error("Malformed JWT found in DHT: " + jwt + e.getMessage());
+				
+				JSONObject response = new JSONObject();
+				
+				response.put("status", 400);
+				response.put("message", "Malformed signature for JWT: " + jwt + " e: " + e.getMessage());
+				
+				return new ResponseEntity<String>(response.toString(), HttpStatus.BAD_REQUEST);
+			}
+			
+			LOGGER.info("JWT for GlobalID " + globalID + " verified");
+			
+			// match new JWT to existing JWT
+			try
+			{
+				existingJWT = DHTManager.getInstance().get(globalID);
+				
+				// GUID found. Ergo, we are updating an existing SocialRecord
 				
 				JSONObject jwtPayloadFromDHT = new JSONObject(new String(Base64UrlCodec.BASE64URL.decodeToString(existingJWT.split("\\.")[1])));
 				existingData = new JSONObject(Base64UrlCodec.BASE64URL.decodeToString(jwtPayloadFromDHT.get("data").toString()));
-				//---
 				
 				// verify the existing dataset's integrity
 				try
 				{
-					SocialRecord.checkDatasetValidity(existingData);
+					//SocialRecord.checkDatasetValidity(existingData);
+					existingSocialRecord = SocialRecord.createFromJSONObject(existingData);
+					existingSocialRecord.validateSchema();
 				}
 				catch (SocialRecordIntegrityException e)
 				{
-					// tried to write dataset. found an existing one. the existing one failed the integrity test
-					LOGGER.error("Integrity exception found for existing dataset: " + existingJWT + " e: " + e.getMessage());
+					// tried to write socialrecord. found an existing one. the existing one failed the integrity test
+					LOGGER.error("Integrity exception found for existing SocialRecord: " + existingJWT + " e: " + e.getMessage());
 					
 					JSONObject response = new JSONObject();
 					
-					response.put("Code", 500);
-					response.put("Description", "Internal Server Error");
-					response.put("Explanation", "Malformed JWT found in DHT: " + existingJWT + " e: " + e.getMessage());
-					response.put("Value", "");
+					response.put("status", 500);
+					response.put("message", "Malformed JWT found in DHT: " + existingJWT + " e: " + e.getMessage());
 					
 					return new ResponseEntity<String>(response.toString(), HttpStatus.INTERNAL_SERVER_ERROR);
 				}
 				
 				// decode key
-				PublicKey existingDatasetPublicKey;
-				
 				try
 				{
-					existingDatasetPublicKey = KeyPairManager.decodePublicKey(existingData.getString("publicKey"));
+					existingPersonalPublicKey = KeyPairManager.decodePublicKey(existingData.getString("personalPublicKey"));
 				}
 				catch (InvalidKeySpecException | NoSuchAlgorithmException e)
 				{
-					// tried to write dataset. found an existing one. the public key of the existing one couldnt be extracted
-					LOGGER.error("Malformed public key found in DHT: " + jwt + " e: " + e.getMessage());
+					// tried to write SocialRecord. found an existing one. the public key of the existing one couldnt be extracted
+					LOGGER.error("Malformed personal public key found in DHT: " + jwt + " e: " + e.getMessage());
 					
 					JSONObject response = new JSONObject();
 					
-					response.put("Code", 500);
-					response.put("Description", "Internal Server Error");
-					response.put("Explanation", "Malformed public key found in DHT: " + jwt + " e: " + e.getMessage());
-					response.put("Value", "");
+					response.put("status", 500);
+					response.put("message", "Malformed personal public key found in DHT: " + jwt + " e: " + e.getMessage());
 					
 					return new ResponseEntity<String>(response.toString(), HttpStatus.INTERNAL_SERVER_ERROR);
 				}
@@ -380,120 +515,88 @@ public class RestService
 				// verify jwt
 				try
 				{
-					Jwts.parser().setSigningKey(existingDatasetPublicKey).parseClaimsJws(jwt);
+					Jwts.parser().setSigningKey(existingPersonalPublicKey).parseClaimsJws(jwt);
 				}
 				catch (MalformedJwtException | UnsupportedJwtException e)
 				{
-					// tried to write dataset. found an existing one. the existing one seems to be malformed jwt
+					// tried to write SocialRecord. found an existing one. the existing one seems to be malformed jwt
 					LOGGER.error("Malformed JWT found in DHT: " + jwt + " e: " + e.getMessage());
 					
 					JSONObject response = new JSONObject();
 					
-					response.put("Code", 500);
-					response.put("Description", "Internal Server Error");
-					response.put("Explanation", "Malformed JWT found in DHT: " + jwt + " e: " + e.getMessage());
-					response.put("Value", "");
+					response.put("status", 500);
+					response.put("message", "Malformed JWT found in DHT: " + jwt + " e: " + e.getMessage());
 					
 					return new ResponseEntity<String>(response.toString(), HttpStatus.INTERNAL_SERVER_ERROR);
 				}
 				catch (SignatureException e)
 				{
-					// tried to write dataset. found an existing one. the signature check of the existing one failed
+					// tried to write SocialRecord. found an existing one. the signature check of the existing one failed
 					LOGGER.error("Malformed JWT found in DHT: " + jwt + e.getMessage());
 					
 					JSONObject response = new JSONObject();
 					
-					response.put("Code", 500);
-					response.put("Description", "Internal Server Error");
-					response.put("Explanation", "Malformed signature for JWT found in DHT: " + jwt + " e: " + e.getMessage());
-					response.put("Value", "");
+					response.put("status", 500);
+					response.put("message", "Malformed signature for JWT found in DHT: " + jwt + " e: " + e.getMessage());
 					
 					return new ResponseEntity<String>(response.toString(), HttpStatus.INTERNAL_SERVER_ERROR);
 				}
 				
 				try
 				{
-					// verify that GUIDs are matching
-					if(!newData.getString("guid").equals(existingData.getString("guid")))
-						throw new IntegrityException("GUIDs are not matching!");
+					// verify that GlobalIDs are matching
+					if(!newData.getString("globalID").equals(existingData.getString("globalID")))
+						throw new IntegrityException("GlobalIDs are not matching!");
 				}
 				catch (IntegrityException e)
 				{
-					// tried to write dataset, found an existing one. GUIDs do not match. Should NEVER happen!
+					// tried to write SocialRecord, found an existing one. GlobalIDs do not match. Should NEVER happen!
 					JSONObject response = new JSONObject();
 					
-					response.put("Code", 400);
-					response.put("Description", "Bad Request");
-					response.put("Explanation", "GUIDs do not match: " + jwt + " e: " + e.getMessage());
-					response.put("Value", "");
+					response.put("status", 400);
+					response.put("message", "GUIDs do not match: " + jwt + " e: " + e.getMessage());
 					
 					return new ResponseEntity<String>(response.toString(), HttpStatus.BAD_REQUEST);
 				}
 				
 				// everything is fine. overwrite existing dataset with new one
-				
-				LOGGER.info("Dataset for GUID " + GUID + " updated: \n" + jwt);
-				
 				try
 				{
-					DHTManager.getInstance().put(GUID, jwt);
+					DHTManager.getInstance().put(globalID, jwt);
+					
+					LOGGER.info("Dataset for GlobalID " + globalID + " updated: \n" + jwt);
 				}
 				catch (IOException e)
 				{
-					// tried to write dataset, found an existing one. Encountered an IO error while overwriting the existing one
+					// tried to write SocialRecord, found an existing one. Encountered an IO error while overwriting the existing one
 					JSONObject response = new JSONObject();
 					
-					response.put("Code", 500);
-					response.put("Description", "Internal Server Error");
-					response.put("Explanation", "Error while writing to DHT: " + jwt + " e: " + e.getMessage());
-					response.put("Value", "");
+					response.put("status", 500);
+					response.put("message", "Error while writing to DHT: " + jwt + " e: " + e.getMessage());
 					
 					return new ResponseEntity<String>(response.toString(), HttpStatus.INTERNAL_SERVER_ERROR);
 				}
 				
-				LOGGER.info("Dataset for [" + GUID + "] written to DHT: \n" + jwt);
+				LOGGER.info("SocialRecord for [" + globalID + "] written to DHT: \n" + jwt);
 				
 				JSONObject response = new JSONObject();
 				
-				response.put("Code", 200);
-				response.put("Description", "OK");
-				response.put("Explanation", "Dataset for GUID " + GUID + " updated: " + jwt);
-				response.put("Value", "");
+				response.put("status", 200);
+				response.put("message", "SocialRecord for GlobalID " + globalID + " updated: " + jwt);
 				
 				return new ResponseEntity<String>(response.toString(), HttpStatus.OK);
 			}
 			catch (GIDNotFoundException e)
 			{
-				// GUID not found. Ergo, we are writing a new dataset to the DHT
+				// GlobalID not found. Aborting
 				
-				// TODO try/catch with error handling here!
-				try
-				{
-					DHTManager.getInstance().put(GUID, jwt);
-				}
-				catch (IOException e1)
-				{
-					// tried to write dataset, found an existing one. Encountered an IO error while overwriting the existing one
-					JSONObject response = new JSONObject();
-					
-					response.put("Code", 500);
-					response.put("Description", "Internal Server Error");
-					response.put("Explanation", "Error while writing to DHT: " + jwt + " e: " + e1.getMessage());
-					response.put("Value", "");
-					
-					return new ResponseEntity<String>(response.toString(), HttpStatus.INTERNAL_SERVER_ERROR);
-				}
-				
-				LOGGER.info("Dataset for [" + GUID + "] written to DHT: \n" + jwt);
-				
+				// tried to write SocialRecord, found an existing one. Encountered an IO error while overwriting the existing one
 				JSONObject response = new JSONObject();
 				
-				response.put("Code", 200);
-				response.put("Description", "OK");
-				response.put("Explanation", "Dataset for GUID " + GUID + " written to DHT: \n" + jwt);
-				response.put("Value", "");
+				response.put("status", 404);
+				response.put("message", "SocialRecord for GlobalID not found: " + globalID);
 				
-				return new ResponseEntity<String>(response.toString(), HttpStatus.OK);
+				return new ResponseEntity<String>(response.toString(), HttpStatus.NOT_FOUND);
 			}
 		}
 		catch(JSONException e)
@@ -503,10 +606,8 @@ public class RestService
 			
 			JSONObject response = new JSONObject();
 			
-			response.put("Code", 500);
-			response.put("Description", "Internal Server Error");
-			response.put("Explanation", "Faulty JSON data in DHT: " + jwt + " e: " + e.getMessage());
-			response.put("Value", "");
+			response.put("status", 500);
+			response.put("message", "Faulty JSON data in DHT: " + jwt + " e: " + e.getMessage());
 			
 			return new ResponseEntity<String>(response.toString(), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
@@ -517,10 +618,8 @@ public class RestService
 			
 			JSONObject response = new JSONObject();
 			
-			response.put("Code", 500);
-			response.put("Description", "Internal server error");
-			response.put("Explanation", "Internal Server Error: " + jwt + " e: " + e.getMessage());
-			response.put("Value", "");
+			response.put("status", 500);
+			response.put("message", "Internal Server Error: " + jwt + " e: " + e.getMessage());
 			
 			return new ResponseEntity<String>(response.toString(), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
