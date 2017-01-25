@@ -199,13 +199,14 @@ public class SocialRecord
 		}
 		catch (ValidationException e)
 		{
-			throw new SocialRecordIntegrityException("Dataset does not validate against JSON Schema");
+			throw new SocialRecordIntegrityException("SocialRecord does not validate against JSON Schema");
 		}
 		
 		return true;
 	}
 	
-	public static boolean checkDatasetValidity(JSONObject json) throws SocialRecordIntegrityException
+	@Deprecated
+	public static boolean checkSocialRecordValidity(JSONObject json) throws SocialRecordIntegrityException
 	{
 		if(!json.has("guid"))
 			throw new SocialRecordIntegrityException("mandatory parameter 'guid' missing");
