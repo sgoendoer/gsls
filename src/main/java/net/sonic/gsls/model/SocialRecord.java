@@ -2,97 +2,143 @@ package net.sonic.gsls.model;
 
 import java.io.IOException;
 import java.io.InputStream;
-
+import org.apache.commons.codec.binary.Base64;
 import org.everit.json.schema.Schema;
 import org.everit.json.schema.loader.SchemaLoader;
 import org.json.JSONTokener;
+
 import org.everit.json.schema.ValidationException;
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 /**
  * Data object for handling the dataset
  * 
- * @date 12.01.2017
- * @version 1
- * @author Sebastian Göndör, Parth Singh
+ * @date 06.02.2017
+ * @version 2
+ * @author Sebastian Göndör
  */
 public class SocialRecord
 {
-	protected String guid;
-	protected String salt;
-	protected JSONArray userIDs;
-	protected String lastUpdate;
-	protected String timeout;
-	protected String publicKey;
-	protected int active;
-	protected int revoked;
-	protected JSONObject defaults;
-	protected int schemaVersion;
-	protected JSONArray legacyIDs;
+	private String type;
+	private String globalID;			// global id
+	private String displayName;			// human readable name
+	private String profileLocation;		// URL
+	private String platformGID;
+	private String personalPublicKey;
+	private String accountPublicKey;
+	private String salt;				// length MUST be 16 chars
+	private String datetime;			// XSD datetime format e.g. 2015-01-01T11:11:11Z
+	private int active;
+	private RevokedKey[] keyRevocationList;
 	
-	// TODO finish deserialize functionality
+	protected SocialRecord()
+	{
+		
+	}
+	
 	public static SocialRecord createFromJSONObject(JSONObject json)
 	{
-		SocialRecord dataset = new SocialRecord();
+		SocialRecord sr = new SocialRecord();
 		
-		dataset.setSchemaVersion(json.getInt("schemaVersion"));
-		dataset.setActive(json.getInt("active"));
-		dataset.setRevoked(json.getInt("revoked"));
-		dataset.setGUID(json.getString("guid"));
-		dataset.setPublicKey(json.getString("publicKey"));
-		dataset.setSalt(json.getString("salt"));
-		dataset.setUserIDs(json.getJSONArray("userIDs"));
-		dataset.setLastUpdate(json.getString("lastUpdate"));
-		dataset.setTimeout(json.getString("timeout"));
-		dataset.setDefaults(json.getJSONObject("defaults"));
-		dataset.setLegacyIDs(json.getJSONArray("legacyIDs"));
+		sr.type = json.getString("type");
+		sr.globalID = json.getString("globalID");
+		sr.platformGID = json.getString("platformGID");
+		sr.displayName = json.getString("displayName");
+		sr.profileLocation = json.getString("profileLocation");
+		sr.datetime = json.getString("datetime");
+		sr.accountPublicKey = json.getString("accountPublicKey");
+		sr.personalPublicKey = json.getString("personalPublicKey");
+		sr.active = json.getInt("active");
+		sr.salt = json.getString("salt");
 		
-		return dataset;
+		sr.keyRevocationList = new RevokedKey[json.getJSONArray("keyRevocationList").length()];
+		for(int i=0; i<json.getJSONArray("keyRevocationList").length(); i++)
+			sr.keyRevocationList[i] = RevokedKey.createFromJSONObject(json.getJSONArray("keyRevocationList").getJSONObject(i));
+		
+		return sr;
 	}
 	
 	public JSONObject exportJSONObject()
 	{
 		JSONObject json = new JSONObject();
-	
-		json.put("schemaVersion", this.schemaVersion);
-		json.put("salt", this.salt);
-		json.put("userIDs", this.userIDs);
-		json.put("lastUpdate", this.lastUpdate);
-		json.put("timeout", this.timeout);
-		json.put("publicKey", this.publicKey);
+		
+		json.put("type", this.type);
+		json.put("globalID", this.globalID);
+		json.put("platformGID", this.platformGID);
+		json.put("displayName", this.displayName);
+		json.put("profileLocation", this.profileLocation);
+		json.put("datetime", this.datetime);
+		json.put("accountPublicKey", this.accountPublicKey);
+		json.put("personalPublicKey", this.personalPublicKey);
 		json.put("active", this.active);
-		json.put("revoked", this.revoked);
-		json.put("guid", this.guid);
-		json.put("defaults", this.defaults);
-		json.put("legacyIDs", this.legacyIDs);
+		json.put("salt", this.salt);
 		
 		return json;
 	}
 	
-	public String getGUID()
+	public String getPlatformGID()
 	{
-		return guid;
+		return this.platformGID;
 	}
 	
-	public void setGUID(String guid)
+	public void setPlatformGID(String platformGID)
 	{
-		this.guid = guid;
+		this.platformGID = platformGID;
 	}
 	
-	public int getSchemaVersion()
+	public String getGlobalID()
 	{
-		return schemaVersion;
+		return this.globalID;
 	}
 	
-	public void setSchemaVersion(int schemaVersion)
+	public void setGlobalID(String gid)
 	{
-		this.schemaVersion = schemaVersion;
+		this.globalID = gid;
+	}
+	
+	public String getDisplayName()
+	{
+		return this.displayName;
+	}
+	
+	public void setDisplayName(String displayname)
+	{
+		this.displayName = displayname;
+	}
+	
+	public String getProfileLocation()
+	{
+		return this.profileLocation;
+	}
+	
+	public void setProfileLocation(String profilelocation)
+	{
+		this.profileLocation = profilelocation;
+	}
+	
+	public String getPersonalPublicKey()
+	{
+		return this.personalPublicKey;
+	}
+	
+	public void setPersonalPublicKey(String personalPublicKey)
+	{
+		this.personalPublicKey = personalPublicKey;
+	}
+	
+	public String getAccountPublicKey()
+	{
+		return this.accountPublicKey;
+	}
+	
+	public void setAccountPublicKey(String accountPublicKey)
+	{
+		this.accountPublicKey = accountPublicKey;
 	}
 	
 	public String getSalt()
 	{
-		return salt;
+		return this.salt;
 	}
 	
 	public void setSalt(String salt)
@@ -100,54 +146,29 @@ public class SocialRecord
 		this.salt = salt;
 	}
 	
-	public JSONArray getUserIDs()
+	public String getType()
 	{
-		return userIDs;
+		return this.type;
 	}
 	
-	public JSONObject getUserIDs(int index)
+	public void setType(String type)
 	{
-		return userIDs.getJSONObject(index);
+		this.type = type;
 	}
 	
-	public void setUserIDs(JSONArray userIDs)
+	public String getDatetime()
 	{
-		this.userIDs = userIDs;
+		return this.datetime;
 	}
 	
-	public String getLastUpdate()
+	public void setDatetime(String datetime)
 	{
-		return lastUpdate;
-	}
-	
-	public void setLastUpdate(String lastUpdate)
-	{
-		this.lastUpdate = lastUpdate;
-	}
-	
-	public String getTimeout()
-	{
-		return timeout;
-	}
-	
-	public void setTimeout(String timeout)
-	{
-		this.timeout = timeout;
-	}
-	
-	public String getPublicKey()
-	{
-		return publicKey;
-	}
-	
-	public void setPublicKey(String publicKey)
-	{
-		this.publicKey = publicKey;
+		this.datetime = datetime;
 	}
 	
 	public int getActive()
 	{
-		return active;
+		return this.active;
 	}
 	
 	public void setActive(int active)
@@ -155,34 +176,14 @@ public class SocialRecord
 		this.active = active;
 	}
 	
-	public int getRevoked()
+	public RevokedKey[] getKeyRevocationList()
 	{
-		return revoked;
+		return this.keyRevocationList;
 	}
 	
-	public void setRevoked(int revoked)
+	public void setKeyRevocationList(RevokedKey[] krl)
 	{
-		this.revoked = revoked;
-	}
-	
-	public JSONObject getDefaults()
-	{
-		return defaults;
-	}
-	
-	public void setDefaults(JSONObject defaults)
-	{
-		this.defaults = defaults;
-	}
-	
-	public JSONArray getLegacyIDs()
-	{
-		return legacyIDs;
-	}
-	
-	public void setLegacyIDs(JSONArray legacyIDs)
-	{
-		this.legacyIDs = legacyIDs;
+		this.keyRevocationList = krl;
 	}
 	
 	public boolean validateSchema() throws SocialRecordIntegrityException
@@ -196,11 +197,45 @@ public class SocialRecord
 		catch (IOException e)
 		{
 			e.printStackTrace();
+			throw new SocialRecordIntegrityException("Error while loading schema.json");
 		}
 		catch (ValidationException e)
 		{
 			throw new SocialRecordIntegrityException("SocialRecord does not validate against JSON Schema");
 		}
+		
+		if(getGlobalID().isEmpty())
+			throw new SocialRecordIntegrityException("mandatory parameter 'globalID' missing");
+		if(!getGlobalID().equals(GID.createGID(this.getPersonalPublicKey(), this.getSalt())))
+			throw new SocialRecordIntegrityException("illegal parameter value...");
+		
+		if(getDatetime().isEmpty())
+			throw new SocialRecordIntegrityException("mandatory parameter 'datetime' missing");
+		if(!net.sonic.gsls.util.XSDDateTime.validateXSDDateTime(getDatetime()))
+			throw new SocialRecordIntegrityException("invalid 'datetime' format...");
+		
+		if(getPersonalPublicKey().isEmpty())
+			throw new SocialRecordIntegrityException("mandatory parameter 'personalPublicKey' missing");
+		String stringtobechecked = getPersonalPublicKey().substring(26, getPersonalPublicKey().length()-24);
+		if (!Base64.isArrayByteBase64(stringtobechecked.getBytes()))
+			throw new SocialRecordIntegrityException("invalid 'personalPublicKey' character set...");
+		
+		if(getAccountPublicKey().isEmpty())
+			throw new SocialRecordIntegrityException("mandatory parameter 'accountPublicKey' missing");
+		stringtobechecked = getAccountPublicKey().substring(26, getAccountPublicKey().length()-24);
+		if (!Base64.isArrayByteBase64(stringtobechecked.getBytes()))
+			throw new SocialRecordIntegrityException("invalid 'accountPublicKey' character set...");
+		
+		if (getSalt().isEmpty())
+			throw new SocialRecordIntegrityException("mandatory parameter 'salt' missing");
+		if (!Base64.isArrayByteBase64(getSalt().getBytes()))
+			throw new SocialRecordIntegrityException("invalid 'Salt' character set...");
+		
+		String isactive = Integer.toString(getActive());
+		if(isactive.isEmpty())
+			throw new SocialRecordIntegrityException("mandatory parameter 'Active' missing");
+		if(getActive() != 0 && getActive() != 1)
+			throw new SocialRecordIntegrityException("invalid 'active' value...");
 		
 		return true;
 	}
