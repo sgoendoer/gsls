@@ -5,12 +5,11 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import net.sonic.gsls.config.Config;
 import net.sonic.gsls.controller.DHTManager;
 
-import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.daemon.Daemon;
@@ -40,29 +39,34 @@ public class GSLSServer implements Daemon
 		
 		Options options = new Options();
 		
-		OptionBuilder.withLongOpt("help");
-		OptionBuilder.withDescription("displays help on cli parameters");
-		Option helpOption = OptionBuilder.create("h");
+		Option helpOption = Option.builder("h")
+				.longOpt("help")
+				.desc("displays help on cli parameters")
+				.build();
 		
-		OptionBuilder.withLongOpt("port_rest");
-		OptionBuilder.withDescription("sets the port for the REST interface [" + config.getPortREST() + "]");
-		OptionBuilder.hasArg();
-		Option portRESTOption = OptionBuilder.create("p");
+		Option portRESTOption = Option.builder("p")
+				.longOpt("port_rest")
+				.desc("sets the port for the REST interface [" + config.getPortREST() + "]")
+				.hasArg()
+				.build();
 		
-		OptionBuilder.withLongOpt("network_interface");
-		OptionBuilder.withDescription("sets the network interface [" + config.getNetworkInterface() + "]");
-		OptionBuilder.hasArg();
-		Option networkInterfaceOption = OptionBuilder.create("n");
+		Option networkInterfaceOption = Option.builder("n")
+				.longOpt("network_interface")
+				.desc("sets the network interface [" + config.getNetworkInterface() + "]")
+				.hasArg()
+				.build();
 		
-		OptionBuilder.withLongOpt("log_path");
-		OptionBuilder.withDescription("sets the directory for the log files [" + config.getLogPath() + "]");
-		OptionBuilder.hasArg();
-		Option logPathOption = OptionBuilder.create("l");
+		Option logPathOption = Option.builder("l")
+				.longOpt("log_path")
+				.desc("sets the directory for the log files [" + config.getLogPath() + "]")
+				.hasArg()
+				.build();
 		
-		OptionBuilder.withLongOpt("connect_node");
-		OptionBuilder.withDescription("sets the GReg node to connect to [" + config.getConnectNode() + "]");
-		OptionBuilder.hasArg();
-		Option connectNodeOption = OptionBuilder.create("c");
+		Option connectNodeOption = Option.builder("c")
+				.longOpt("connect_node")
+				.desc("sets the GReg node to connect to [" + config.getConnectNode() + "]")
+				.hasArg()
+				.build();
 		
 		options.addOption(helpOption);
 		options.addOption(portRESTOption);
@@ -71,7 +75,7 @@ public class GSLSServer implements Daemon
 		options.addOption(connectNodeOption);
 		
 		// parse common line parameters
-		CommandLineParser parser = new BasicParser();
+		CommandLineParser parser = new DefaultParser();
 		
 		try
 		{
