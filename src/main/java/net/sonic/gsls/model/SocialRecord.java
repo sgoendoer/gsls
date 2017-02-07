@@ -8,6 +8,7 @@ import org.everit.json.schema.loader.SchemaLoader;
 import org.json.JSONTokener;
 
 import org.everit.json.schema.ValidationException;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 /**
@@ -19,6 +20,8 @@ import org.json.JSONObject;
  */
 public class SocialRecord
 {
+	private String _context;			// JSON-LD
+	private String _type;				// JSON-LD
 	private String type;
 	private String globalID;			// global id
 	private String displayName;			// human readable name
@@ -40,6 +43,8 @@ public class SocialRecord
 	{
 		SocialRecord sr = new SocialRecord();
 		
+		sr._context = json.getString("@context");
+		sr._type = json.getString("@type");
 		sr.type = json.getString("type");
 		sr.globalID = json.getString("globalID");
 		sr.platformGID = json.getString("platformGID");
@@ -62,6 +67,8 @@ public class SocialRecord
 	{
 		JSONObject json = new JSONObject();
 		
+		json.put("@context", this._context);
+		json.put("@type", this._type);
 		json.put("type", this.type);
 		json.put("globalID", this.globalID);
 		json.put("platformGID", this.platformGID);
@@ -72,8 +79,29 @@ public class SocialRecord
 		json.put("personalPublicKey", this.personalPublicKey);
 		json.put("active", this.active);
 		json.put("salt", this.salt);
+		json.put("keyRevocationList", new JSONArray(this.keyRevocationList));
 		
 		return json;
+	}
+	
+	public String getAtContext()
+	{
+		return this._context;
+	}
+	
+	public void setAtContext(String context)
+	{
+		this._context = context;
+	}
+	
+	public String getAtType()
+	{
+		return this._type;
+	}
+	
+	public void setAtType(String type)
+	{
+		this._type = type;
 	}
 	
 	public String getPlatformGID()
@@ -201,7 +229,7 @@ public class SocialRecord
 		}
 		catch (ValidationException e)
 		{
-			throw new SocialRecordIntegrityException("SocialRecord does not validate against JSON Schema");
+			throw new SocialRecordIntegrityException("SocialRecord does not validate against JSON Schema: " + e.getMessage());
 		}
 		
 		if(getType().isEmpty())
@@ -211,8 +239,8 @@ public class SocialRecord
 		
 		if(getGlobalID().isEmpty())
 			throw new SocialRecordIntegrityException("mandatory parameter 'globalID' missing");
-		if(!getGlobalID().equals(GID.createGID(this.getPersonalPublicKey(), this.getSalt())))
-			throw new SocialRecordIntegrityException("illegal parameter value for 'globalID'");
+		/*if(!getGlobalID().equals(GID.createGID(this.getPersonalPublicKey(), this.getSalt())))
+			throw new SocialRecordIntegrityException("illegal parameter value for 'globalID'");*/
 		
 		if(getDatetime().isEmpty())
 			throw new SocialRecordIntegrityException("mandatory parameter 'datetime' missing");
