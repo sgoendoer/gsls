@@ -44,7 +44,21 @@
 		"keyRevocationList": {
 			"type": "array",
 			"items": {
-				"type": "object"
+				"type": "object",
+				"properties": {
+					"revokedPublicKey": {
+						"type": "string"
+					},
+					"revocationDate": {
+						"type": "string"
+					},
+					"revocationReason": {
+						"type": "integer"
+					},
+					"signature": {
+						"type": "string"
+					}
+				}
 			}
 		}
 	},
