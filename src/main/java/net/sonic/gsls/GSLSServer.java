@@ -141,7 +141,7 @@ public class GSLSServer implements Daemon
 		}
 		catch (Exception e)
 		{
-			LOGGER.info("failed!");
+			LOGGER.info("failed! Service terminated!");
 			e.printStackTrace();
 		}
 	}

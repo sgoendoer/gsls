@@ -4,17 +4,17 @@ package net.sonic.gsls.config;
  * Configuration class of the GSLS. Using singleton pattern.
  * 
  * @author Sebastian Göndör
- * @version 2
+ * @version 3
  * @date 17.01.2017
  */
 public class Config
 {
 	private static Config _singleton = null;
 
-	private static final String		versionName				= "0.2.0";
-	private static final int		versionNumber			= 2006;
+	private static final String		versionName				= "0.2.1";
+	private static final int		versionNumber			= 2014;
 	private static final String		versionCode				= "";
-	private static final String		versionDate				= "2017-01-17";
+	private static final String		versionDate				= "2017-02-07";
 	private static final String		productName				= "Sonic Global Social Lookup System";
 	private static final String		productNameShort		= "gReg";
 
@@ -51,7 +51,7 @@ public class Config
 	{
 		this.networkInterface = networkInterfaceDefault;
 		this.connectNode = connectNodeDefault;
-		this.logPath = logPathDefault; // TODO check if this is working
+		this.logPath = logPathDefault; // TODO check if this is working as intended on all platforms
 		this.portREST = portRESTDefault;
 	}
 
@@ -141,7 +141,7 @@ public class Config
 		return versionCode;
 	}
 
-	public int getVersaionDatasetSchema()
+	public int getVersionDatasetSchema()
 	{
 		return versionDatasetSchema;
 	}

@@ -47,17 +47,20 @@ public class RestService
 	public ResponseEntity<String> index() throws URISyntaxException
 	{
 		LOGGER.error("Incoming request: GET /");
+		
 		List<PeerAddress> AllNeighbors = DHTManager.getInstance().getAllNeighbors();
 		
 		JSONArray connectedNodes = new JSONArray();
 		
-		for (PeerAddress neighbor : AllNeighbors) {
+		for(PeerAddress neighbor : AllNeighbors)
+		{
 			connectedNodes.put(neighbor.inetAddress().getHostAddress());
 		}
 		
 		JSONObject version = new JSONObject();
 		version.put("version", Config.getInstance().getVersionName());
 		version.put("build", Config.getInstance().getVersionNumber());
+		version.put("build date", Config.getInstance().getVersionDate());
 		
 		JSONObject response = new JSONObject();
 		response.put("status", 200);

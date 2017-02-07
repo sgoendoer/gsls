@@ -125,6 +125,11 @@ public class DHTManager
 		peer.remove(Number160.createHash(key)).start();
 	}
 	
+	/**
+	 * retrieves a list of all connected peers
+	 * 
+	 * @return List<PeerAddress>
+	 */
 	public List<PeerAddress> getAllNeighbors()
 	{
 		return peer.peerBean().peerMap().all();
