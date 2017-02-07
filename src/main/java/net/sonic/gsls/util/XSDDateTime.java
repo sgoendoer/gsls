@@ -45,8 +45,9 @@ public class XSDDateTime
 		{
 			DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 			date = formatter.parse(value);
+			
 			DateFormat tzFormatter = new SimpleDateFormat("Z");
-			String timezone = tzFormatter.format(date);
+			String timezone = tzFormatter.format(value);
 			
 			if(!value.equals(formatter.format(date) + timezone.substring(0, 3) + ":" + timezone.substring(3)))
 			{
@@ -55,7 +56,7 @@ public class XSDDateTime
 		}
 		catch (ParseException e)
 		{
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 		
 		return date != null;
