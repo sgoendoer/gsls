@@ -132,7 +132,7 @@ public class RestService
 				{
 					// decode JWT
 					JSONObject jwtPayload = new JSONObject(new String(Base64UrlCodec.BASE64URL.decodeToString(jwt.split("\\.")[1])));
-					JSONObject data = new JSONObject(Base64UrlCodec.BASE64URL.decodeToString(jwtPayload.get("data").toString()));
+					JSONObject data = new JSONObject(Base64UrlCodec.BASE64URL.decodeToString(jwtPayload.get("socialRecord").toString()));
 					
 					LOGGER.info("decoded JWT payload: " + data.toString());
 					
@@ -141,7 +141,7 @@ public class RestService
 					{
 						//SocialRecord.checkSocialRecordValidity(data);
 						socialRecord = SocialRecord.createFromJSONObject(data);
-						socialRecord.validateSchema();
+						socialRecord.validate();
 					}
 					catch (SocialRecordIntegrityException e)
 					{
@@ -261,7 +261,7 @@ public class RestService
 		{
 			// decode JWT
 			JSONObject jwtPayload = new JSONObject(new String(Base64UrlCodec.BASE64URL.decodeToString(jwt.split("\\.")[1])));
-			data = new JSONObject(Base64UrlCodec.BASE64URL.decodeToString(jwtPayload.get("data").toString()));
+			data = new JSONObject(Base64UrlCodec.BASE64URL.decodeToString(jwtPayload.get("socialRecord").toString()));
 			
 			//LOGGER.info("decoded JWT payload: " + data.toString());
 			
@@ -270,7 +270,7 @@ public class RestService
 			{
 				//SocialRecord.checkSocialRecordValidity(data);
 				socialRecord = SocialRecord.createFromJSONObject(data);
-				socialRecord.validateSchema();
+				socialRecord.validate();
 			}
 			catch (SocialRecordIntegrityException e)
 			{
@@ -397,7 +397,7 @@ public class RestService
 		{
 			// decode JWT
 			JSONObject jwtPayload = new JSONObject(new String(Base64UrlCodec.BASE64URL.decodeToString(jwt.split("\\.")[1])));
-			newData = new JSONObject(Base64UrlCodec.BASE64URL.decodeToString(jwtPayload.get("data").toString()));
+			newData = new JSONObject(Base64UrlCodec.BASE64URL.decodeToString(jwtPayload.get("socialRecord").toString()));
 			
 			//LOGGER.info("decoded JWT payload: " + newData.toString());
 			
@@ -406,7 +406,7 @@ public class RestService
 			{
 				//SocialRecord.checkDatasetValidity(newData);
 				newSocialRecord = SocialRecord.createFromJSONObject(newData);
-				newSocialRecord.validateSchema();
+				newSocialRecord.validate();
 			}
 			catch (SocialRecordIntegrityException e)
 			{
@@ -475,14 +475,14 @@ public class RestService
 				// GUID found. Ergo, we are updating an existing SocialRecord
 				
 				JSONObject jwtPayloadFromDHT = new JSONObject(new String(Base64UrlCodec.BASE64URL.decodeToString(existingJWT.split("\\.")[1])));
-				existingData = new JSONObject(Base64UrlCodec.BASE64URL.decodeToString(jwtPayloadFromDHT.get("data").toString()));
+				existingData = new JSONObject(Base64UrlCodec.BASE64URL.decodeToString(jwtPayloadFromDHT.get("socialRecord").toString()));
 				
 				// verify the existing dataset's integrity
 				try
 				{
 					//SocialRecord.checkDatasetValidity(existingData);
 					existingSocialRecord = SocialRecord.createFromJSONObject(existingData);
-					existingSocialRecord.validateSchema();
+					existingSocialRecord.validate();
 				}
 				catch (SocialRecordIntegrityException e)
 				{

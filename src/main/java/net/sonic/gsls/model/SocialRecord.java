@@ -186,13 +186,13 @@ public class SocialRecord
 		this.keyRevocationList = krl;
 	}
 	
-	public boolean validateSchema() throws SocialRecordIntegrityException
+	public boolean validate() throws SocialRecordIntegrityException
 	{
-		try (InputStream inputStream = getClass().getResourceAsStream("schema.json"))
+		try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream("schema.json"))
 		{
-				JSONObject rawSchema = new JSONObject(new JSONTokener(inputStream));
-				Schema schema = SchemaLoader.load(rawSchema);
-				schema.validate(exportJSONObject());
+			JSONObject rawSchema = new JSONObject(new JSONTokener(inputStream));
+			Schema schema = SchemaLoader.load(rawSchema);
+			schema.validate(exportJSONObject());
 		}
 		catch (IOException e)
 		{
