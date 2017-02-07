@@ -204,75 +204,51 @@ public class SocialRecord
 			throw new SocialRecordIntegrityException("SocialRecord does not validate against JSON Schema");
 		}
 		
+		if(getType().isEmpty())
+			throw new SocialRecordIntegrityException("mandatory parameter 'type' missing");
+		if(!getType().equals("platform") && !getType().equals("user"))
+			throw new SocialRecordIntegrityException("illegal parameter value for 'type'");
+		
 		if(getGlobalID().isEmpty())
 			throw new SocialRecordIntegrityException("mandatory parameter 'globalID' missing");
 		if(!getGlobalID().equals(GID.createGID(this.getPersonalPublicKey(), this.getSalt())))
-			throw new SocialRecordIntegrityException("illegal parameter value...");
+			throw new SocialRecordIntegrityException("illegal parameter value for 'globalID'");
 		
 		if(getDatetime().isEmpty())
 			throw new SocialRecordIntegrityException("mandatory parameter 'datetime' missing");
 		if(!net.sonic.gsls.util.XSDDateTime.validateXSDDateTime(getDatetime()))
 			throw new SocialRecordIntegrityException("invalid 'datetime' format...");
 		
+		if(getDisplayName().isEmpty())
+			throw new SocialRecordIntegrityException("mandatory parameter 'profileLocation' missing");
+		
+		if(getProfileLocation().isEmpty())
+			throw new SocialRecordIntegrityException("mandatory parameter 'type' missing");
+		
 		if(getPersonalPublicKey().isEmpty())
 			throw new SocialRecordIntegrityException("mandatory parameter 'personalPublicKey' missing");
 		String stringtobechecked = getPersonalPublicKey().substring(26, getPersonalPublicKey().length()-24);
 		if (!Base64.isArrayByteBase64(stringtobechecked.getBytes()))
-			throw new SocialRecordIntegrityException("invalid 'personalPublicKey' character set...");
+			throw new SocialRecordIntegrityException("invalid 'personalPublicKey' characterset");
 		
 		if(getAccountPublicKey().isEmpty())
 			throw new SocialRecordIntegrityException("mandatory parameter 'accountPublicKey' missing");
 		stringtobechecked = getAccountPublicKey().substring(26, getAccountPublicKey().length()-24);
 		if (!Base64.isArrayByteBase64(stringtobechecked.getBytes()))
-			throw new SocialRecordIntegrityException("invalid 'accountPublicKey' character set...");
+			throw new SocialRecordIntegrityException("invalid 'accountPublicKey' characterset");
 		
 		if (getSalt().isEmpty())
 			throw new SocialRecordIntegrityException("mandatory parameter 'salt' missing");
 		if (!Base64.isArrayByteBase64(getSalt().getBytes()))
-			throw new SocialRecordIntegrityException("invalid 'Salt' character set...");
+			throw new SocialRecordIntegrityException("invalid 'salt' characterset");
 		
 		String isactive = Integer.toString(getActive());
 		if(isactive.isEmpty())
 			throw new SocialRecordIntegrityException("mandatory parameter 'Active' missing");
-		if(getActive() != 0 && getActive() != 1)
-			throw new SocialRecordIntegrityException("invalid 'active' value...");
+		if(getActive() != 0 && getActive() != 1 && getActive() != 2)
+			throw new SocialRecordIntegrityException("invalid parameter value for 'active'");
 		
-		return true;
-	}
-	
-	@Deprecated
-	public static boolean checkSocialRecordValidity(JSONObject json) throws SocialRecordIntegrityException
-	{
-		if(!json.has("guid"))
-			throw new SocialRecordIntegrityException("mandatory parameter 'guid' missing");
-		if(!json.has("schemaVersion"))
-			throw new SocialRecordIntegrityException("mandatory parameter 'schemaVersion' missing");
-		
-		// TODO: userIDs are now objects. Rewrite check
-		if(!json.has("userIDs"))
-			throw new SocialRecordIntegrityException("mandatory parameter 'userIDs' missing");
-		if(!json.has("lastUpdate"))
-			throw new SocialRecordIntegrityException("mandatory parameter 'lastUpdate' missing");
-		if(!json.has("timeout"))
-			throw new SocialRecordIntegrityException("mandatory parameter 'timeout' missing");
-		if(!json.has("publicKey"))
-			throw new SocialRecordIntegrityException("mandatory parameter 'publicKey' missing");
-		if(!json.has("salt"))
-			throw new SocialRecordIntegrityException("mandatory parameter 'salt' missing");
-		if(!json.has("revoked"))
-			throw new SocialRecordIntegrityException("mandatory parameter 'revoked' missing");
-		if(!json.has("defaults"))
-			throw new SocialRecordIntegrityException("mandatory parameter 'defaults' missing");
-		
-		if(!json.getJSONObject("defaults").has("voice"))
-			throw new SocialRecordIntegrityException("mandatory parameter 'defaults : voice' missing");
-		if(!json.getJSONObject("defaults").has("chat"))
-			throw new SocialRecordIntegrityException("mandatory parameter 'defaults : chat' missing");
-		if(!json.getJSONObject("defaults").has("video"))
-			throw new SocialRecordIntegrityException("mandatory parameter 'defaults : video' missing");
-		// for unknown reasons, this fails always
-		/*if(json.getString("guid").equals(GUID.createGUID(json.getString("publicKey"), json.getString("salt"))))
-			throw new DatasetIntegrityException("guid does not match publicKey/salt: "+ json.getString("publicKey") + " :: " + json.getString("salt"));*/
+		// TODO check format of KeyRevocationList
 		
 		return true;
 	}
