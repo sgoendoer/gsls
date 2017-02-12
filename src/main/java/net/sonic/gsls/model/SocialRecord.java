@@ -33,6 +33,8 @@ public class SocialRecord
 	private String datetime;			// XSD datetime format e.g. 2015-01-01T11:11:11Z
 	private int active;
 	private RevokedKey[] keyRevocationList;
+	private Trustor[] trustors;
+	private Trustee[] trustees;
 	
 	protected SocialRecord()
 	{
@@ -60,6 +62,14 @@ public class SocialRecord
 		for(int i=0; i<json.getJSONArray("keyRevocationList").length(); i++)
 			sr.keyRevocationList[i] = RevokedKey.createFromJSONObject(json.getJSONArray("keyRevocationList").getJSONObject(i));
 		
+		sr.trustors = new Trustor[json.getJSONArray("trustors").length()];
+		for(int i=0; i<json.getJSONArray("trustors").length(); i++)
+			sr.trustors[i] = Trustor.createFromJSONObject(json.getJSONArray("trustors").getJSONObject(i));
+
+		sr.trustees = new Trustee[json.getJSONArray("trustees").length()];
+		for(int i=0; i<json.getJSONArray("trustees").length(); i++)
+			sr.trustees[i] = Trustee.createFromJSONObject(json.getJSONArray("trustees").getJSONObject(i));		
+		
 		return sr;
 	}
 	
@@ -80,6 +90,8 @@ public class SocialRecord
 		json.put("active", this.active);
 		json.put("salt", this.salt);
 		json.put("keyRevocationList", new JSONArray(this.keyRevocationList));
+		json.put("trustors", new JSONArray(this.trustors));
+		json.put("trustees", new JSONArray(this.trustees));		
 		
 		return json;
 	}
@@ -212,6 +224,23 @@ public class SocialRecord
 	public void setKeyRevocationList(RevokedKey[] krl)
 	{
 		this.keyRevocationList = krl;
+	}
+	
+	public Trustor[] getTrustors()
+	{
+		return this.trustors;
+	}
+	
+	public void setTrustors(Trustor[] trustorsList){
+		this.trustors = trustorsList;
+	}
+	
+	public Trustee[] getTrustees(){
+		return this.trustees;
+	}
+	
+	public void setTrustees(Trustee[] trusteesList){
+		this.trustees = trusteesList;
 	}
 	
 	public boolean validate() throws SocialRecordIntegrityException

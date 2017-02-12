@@ -60,6 +60,25 @@
 					}
 				}
 			}
+		},
+		"trustors":{
+			"type": "array",
+			"items": {
+				"type": "object",
+				"properties": {
+					"globalID":{ "type": "string" },
+					"signedMessage": { "type": "string"}
+				}
+			}
+		},
+		"trustees":{
+			"type": "array",
+			"items": {
+				"type": "object",
+				"properties": {
+					"globalID": {"type": "string"}
+				}
+			}
 		}
 	},
 	"required": ["@context", "@type", "globalID", "type", "platformGID", "displayName", "profileLocation", "personalPublicKey", "accountPublicKey", "salt", "datetime", "active", "keyRevocationList"]
