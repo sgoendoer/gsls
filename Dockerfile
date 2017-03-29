@@ -8,8 +8,8 @@ MAINTAINER Sebastian Göndör
 WORKDIR /build
 
 # Compile and package jar
-ADD pom.xml /build/pom.xml
-ADD src /build/src
+#ADD pom.xml /build/pom.xml
+#ADD src /build/src
 #RUN ["mvn", "clean"]
 #RUN ["mvn", "install"]
 
