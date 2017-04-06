@@ -4,8 +4,9 @@ Global Social Lookup System (SONIC)
 ## api
 
 - GET /
-- POST /
-- PUT /
+- GET /:gid
+- POST /:gid
+- PUT /:gid
 
 ## install
 
