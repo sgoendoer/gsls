@@ -55,8 +55,23 @@ public class DHTManager
 		bind.addInterface(Config.getInstance().getNetworkInterface());
 		peer = new PeerBuilderDHT(new PeerBuilder(new Number160(rand)).ports(Config.getInstance().getPortDHT()).start()).start();
 		
+		this.connectToConnectNode();
+		
+		/*new IndirectReplication(peer).start();
+		
+		InetAddress address = Inet4Address.getByName(Config.getInstance().getConnectNode());
+		FutureDiscover futureDiscover = peer.peer().discover().inetAddress(address).ports(Config.getInstance().getPortDHT()).start();
+		futureDiscover.awaitUninterruptibly();
+		FutureBootstrap futureBootstrap = peer.peer().bootstrap().inetAddress(address).ports(Config.getInstance().getPortDHT()).start();
+		futureBootstrap.awaitUninterruptibly();*/
+		
+		return this;
+	}
+	
+	public DHTManager connectToConnectNode() throws IOException
+	{
 		new IndirectReplication(peer).start();
-
+		
 		InetAddress address = Inet4Address.getByName(Config.getInstance().getConnectNode());
 		FutureDiscover futureDiscover = peer.peer().discover().inetAddress(address).ports(Config.getInstance().getPortDHT()).start();
 		futureDiscover.awaitUninterruptibly();

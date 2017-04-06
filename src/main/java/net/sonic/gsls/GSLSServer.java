@@ -1,6 +1,7 @@
 package net.sonic.gsls;
 
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.Scheduled;
 
 import net.sonic.gsls.config.Config;
 import net.sonic.gsls.controller.DHTManager;
@@ -142,6 +143,23 @@ public class GSLSServer implements Daemon
 		catch (Exception e)
 		{
 			LOGGER.info("failed! Service terminated!");
+			e.printStackTrace();
+		}
+	}
+	
+	// 5 minute delay, then every 12 hours
+	//@Scheduled(initialDelay=5 * 1000, fixedRate=30 * 1000)
+	@Scheduled(initialDelay=5 * 60 * 1000, fixedRate=12 * 60 * 60 * 1000)
+	protected void reconnect()
+	{
+		try
+		{
+			LOGGER.info("running reconnect functionality...");
+			DHTManager.getInstance().connectToConnectNode();
+		}
+		catch (Exception e)
+		{
+			LOGGER.info("reconnect functionality failed!");
 			e.printStackTrace();
 		}
 	}
