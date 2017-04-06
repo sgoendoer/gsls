@@ -1,6 +1,7 @@
 package net.sonic.gsls;
 
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 
 import net.sonic.gsls.config.Config;
@@ -28,6 +29,7 @@ import org.springframework.boot.SpringApplication;
  * @author Sebastian Göndör
  */
 @SpringBootApplication
+@EnableScheduling
 public class GSLSServer implements Daemon
 {
 	private static Logger LOGGER;
@@ -148,13 +150,14 @@ public class GSLSServer implements Daemon
 	}
 	
 	// 5 minute delay, then every 12 hours
-	//@Scheduled(initialDelay=5 * 1000, fixedRate=30 * 1000)
-	@Scheduled(initialDelay=5 * 60 * 1000, fixedRate=12 * 60 * 60 * 1000)
+	@Scheduled(initialDelay=5 * 1000, fixedRate=30 * 1000)
+	//@Scheduled(initialDelay=5 * 60 * 1000, fixedRate=12 * 60 * 60 * 1000)
 	protected void reconnect()
 	{
+		LOGGER.info("running reconnect functionality...");
+		LOGGER.error("----------------------- RECONNECT");
 		try
 		{
-			LOGGER.info("running reconnect functionality...");
 			DHTManager.getInstance().connectToConnectNode();
 		}
 		catch (Exception e)

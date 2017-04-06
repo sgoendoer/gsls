@@ -46,7 +46,7 @@ public class RestService
 	@RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<String> index() throws URISyntaxException
 	{
-		LOGGER.error("Incoming request: GET /");
+		LOGGER.info("Incoming request: GET /");
 		
 		List<PeerAddress> AllNeighbors = DHTManager.getInstance().getAllNeighbors();
 		
@@ -84,7 +84,7 @@ public class RestService
 	{
 		SocialRecord socialRecord;
 		
-		LOGGER.error("Incoming request: GET /" + globalID);
+		LOGGER.info("Incoming request: GET /" + globalID);
 		
 		if(globalID == null)
 		{
@@ -251,7 +251,7 @@ public class RestService
 	@RequestMapping(value = "/{globalID}", method = RequestMethod.POST)
 	public ResponseEntity<String> postDdata(@RequestBody String jwt, @PathVariable("globalID") String globalID)
 	{
-		LOGGER.error("Incoming request: POST /" + globalID + " - JWT: " + jwt);
+		LOGGER.info("Incoming request: POST /" + globalID + " - JWT: " + jwt);
 		
 		SocialRecord socialRecord;
 		JSONObject data; // the new jwt
@@ -382,7 +382,7 @@ public class RestService
 	@RequestMapping(value = "/{globalID}", method = RequestMethod.PUT)
 	public ResponseEntity<String> putdata(@RequestBody String jwt, @PathVariable("globalID") String globalID)
 	{
-		LOGGER.error("Incoming request: PUT /" + globalID + " - JWT: " + jwt);
+		LOGGER.info("Incoming request: PUT /" + globalID + " - JWT: " + jwt);
 		
 		SocialRecord newSocialRecord;
 		SocialRecord existingSocialRecord;
