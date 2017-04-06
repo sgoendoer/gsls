@@ -5,16 +5,16 @@ package net.sonic.gsls.config;
  * 
  * @author Sebastian Göndör
  * @version 4
- * @date 29.03.2017
+ * @date 06.04.2017
  */
 public class Config
 {
 	private static Config _singleton = null;
 
-	private static final String		versionName				= "0.2.2";
-	private static final int		versionNumber			= 2064;
+	private static final String		versionName				= "0.2.3";
+	private static final int		versionNumber			= 2122;
 	private static final String		versionCode				= "";
-	private static final String		versionDate				= "2017-03-29";
+	private static final String		versionDate				= "2017-04-06";
 	private static final String		productName				= "Sonic Global Social Lookup System";
 	private static final String		productNameShort		= "gReg";
 
