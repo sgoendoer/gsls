@@ -150,12 +150,12 @@ public class GSLSServer implements Daemon
 	}
 	
 	// 5 minute delay, then every 12 hours
-	@Scheduled(initialDelay=5 * 1000, fixedRate=30 * 1000)
 	//@Scheduled(initialDelay=5 * 60 * 1000, fixedRate=12 * 60 * 60 * 1000)
+	@Scheduled(initialDelay=2 * 60 * 1000, fixedRate=1 * 60 * 60 * 1000)
 	protected void reconnect()
 	{
 		LOGGER.info("running reconnect functionality...");
-		LOGGER.error("----------------------- RECONNECT");
+		
 		try
 		{
 			DHTManager.getInstance().connectToConnectNode();

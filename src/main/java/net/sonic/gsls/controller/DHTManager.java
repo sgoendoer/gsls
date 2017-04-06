@@ -14,8 +14,6 @@ import net.tomp2p.peers.PeerAddress;
 import net.tomp2p.replication.IndirectReplication;
 import net.tomp2p.storage.Data;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -38,9 +36,6 @@ public class DHTManager
 	@Autowired
 	private static DHTManager	instance	= null;
 	
-	@Autowired
-	private static final Logger LOGGER = LoggerFactory.getLogger(RestService.class);
-	
 	private PeerDHT peer;
 	
 	private DHTManager()
@@ -57,8 +52,6 @@ public class DHTManager
 	
 	public DHTManager initDHT() throws IOException
 	{
-		LOGGER.info("----------------------- INIT");
-		
 		Random rand = new Random();
 		Bindings bind = new Bindings();
 		bind.addInterface(Config.getInstance().getNetworkInterface());
@@ -79,7 +72,6 @@ public class DHTManager
 	
 	public DHTManager connectToConnectNode() throws IOException
 	{
-		LOGGER.info("----------------------- CONNECT");
 		new IndirectReplication(peer).start();
 		
 		InetAddress address = Inet4Address.getByName(Config.getInstance().getConnectNode());

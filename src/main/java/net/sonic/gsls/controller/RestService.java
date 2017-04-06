@@ -16,7 +16,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -40,7 +39,6 @@ import java.util.List;
 @RequestMapping("/")
 public class RestService
 {
-	@Autowired
 	private static final Logger LOGGER = LoggerFactory.getLogger(RestService.class);
 	
 	@RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
