@@ -92,22 +92,29 @@ public class DHTManager
 	 * @throws IOException
 	 * @throws GIDNotFoundException 
 	 */
-	public String get(String key) throws ClassNotFoundException, IOException, GIDNotFoundException
+	public String get(String key) throws GIDNotFoundException
 	{
-		FutureGet futureGet = peer.get(Number160.createHash(key)).start();
-		futureGet.awaitUninterruptibly();
-		
-		// TODO: use non-blocking?
-		if(futureGet.isSuccess() && futureGet.data() != null)
+		try
 		{
-			return futureGet.data().object().toString();
+			FutureGet futureGet = peer.get(Number160.createHash(key)).start();
+			futureGet.awaitUninterruptibly();
+			
+			// TODO: use non-blocking?
+			if(futureGet.isSuccess() && futureGet.data() != null)
+			{
+				return futureGet.data().object().toString();
+			}
+			else
+			{
+				throw new GIDNotFoundException("GID not found");
+			}
+			
+			//return null; // TODO: decide on sentinel value
 		}
-		else
+		catch(ClassNotFoundException | IOException e)
 		{
-			throw new GIDNotFoundException("");
+			throw new GIDNotFoundException("GID not found");
 		}
-		
-		//return null; // TODO: decide on sentinel value
 	}
 	
 	/**
