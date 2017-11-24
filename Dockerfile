@@ -14,9 +14,9 @@ WORKDIR /build
 #RUN ["mvn", "install"]
 
 # Dependencies
-ADD target/gsls-0.2.3.jar gsls-0.2.3.jar
+ADD target/gsls-0.2.5.jar gsls-0.2.5.jar
 
 EXPOSE 4001
 EXPOSE 4002
 
-ENTRYPOINT ["java", "-jar", "gsls-0.2.3.jar"]
+ENTRYPOINT ["java", "-jar", "gsls-0.2.5.jar"]

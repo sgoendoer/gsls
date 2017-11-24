@@ -253,7 +253,7 @@ public class RestService
 		
 		SocialRecord socialRecord;
 		JSONObject data; // the new jwt
-		PublicKey publicKey; // the public key of the NEW version
+		PublicKey personalPublicKey; // the public key of the NEW version
 		
 		try
 		{
@@ -285,7 +285,7 @@ public class RestService
 			// decode key
 			try
 			{
-				publicKey = KeyPairManager.decodePublicKey(data.getString("publicKey"));
+				personalPublicKey = KeyPairManager.decodePublicKey(data.getString("personalPublicKey"));
 			}
 			catch (InvalidKeySpecException | NoSuchAlgorithmException e)
 			{
@@ -302,7 +302,7 @@ public class RestService
 			// verify jwt
 			try
 			{
-				Jwts.parser().setSigningKey(publicKey).parseClaimsJws(jwt);
+				Jwts.parser().setSigningKey(personalPublicKey).parseClaimsJws(jwt);
 			}
 			catch (MalformedJwtException | UnsupportedJwtException e)
 			{
