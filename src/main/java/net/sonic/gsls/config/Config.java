@@ -12,9 +12,9 @@ public class Config
 	private static Config _singleton = null;
 
 	private static final String		versionName				= "0.2.5";
-	private static final int		versionNumber			= 2153;
+	private static final int		versionNumber			= 2155;
 	private static final String		versionCode				= "";
-	private static final String		versionDate				= "2017-11-24";
+	private static final String		versionDate				= "2017-11-27";
 	private static final String		productName				= "Sonic Global Social Lookup System";
 	private static final String		productNameShort		= "gsls";
 

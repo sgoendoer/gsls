@@ -333,8 +333,6 @@ public class RestService
 			{
 				// everything is fine. write SocialRecord to DHT
 				DHTManager.getInstance().put(globalID, jwt);
-				
-				LOGGER.info("SocialRecord for GlobalID " + globalID + " uploaded: \n" + jwt);
 			}
 			catch (IOException e)
 			{
@@ -347,7 +345,7 @@ public class RestService
 				return new ResponseEntity<String>(response.toString(), HttpStatus.INTERNAL_SERVER_ERROR);
 			}
 			
-			LOGGER.info("SocialRecord for [" + globalID + "] written to DHT: \n" + jwt);
+			LOGGER.info("SocialRecord for [" + globalID + "] written to DHT");
 			
 			JSONObject response = new JSONObject();
 			
@@ -564,8 +562,6 @@ public class RestService
 				try
 				{
 					DHTManager.getInstance().put(globalID, jwt);
-					
-					LOGGER.info("Dataset for GlobalID " + globalID + " updated: \n" + jwt);
 				}
 				catch (IOException e)
 				{
